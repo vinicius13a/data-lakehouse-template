@@ -1,0 +1,5 @@
+# Google Dataform configuration
+
+defaultDataset: dataform
+defaultAssertionDataset: dataform_assertions
+defaultLocation: US
