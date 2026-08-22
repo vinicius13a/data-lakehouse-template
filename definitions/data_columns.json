@@ -1,0 +1,5 @@
+{
+  "valid_from": "The datetime this version of the record became valid (from Datastream CDC metadata).",
+  "valid_to": "The datetime this version of the record expired. A far-future value means it is the current record.",
+  "_meta_timestamp_index": "Row index used to deduplicate CDC events for the same primary key."
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "table_schema": "sales_app",
+    "table_name": "customers",
+    "cols": ["id"],
+    "description": "OLTP customer master: demographics, location and segment."
+  },
+  {
+    "table_schema": "sales_app",
+    "table_name": "products",
+    "cols": ["id"],
+    "description": "OLTP product catalog: name, category, list price and unit cost."
+  },
+  {
+    "table_schema": "sales_app",
+    "table_name": "stores",
+    "cols": ["id"],
+    "description": "OLTP store / location master: region and store type."
+  },
+  {
+    "table_schema": "sales_app",
+    "table_name": "orders",
+    "cols": ["id"],
+    "description": "OLTP sales order header: customer, store, order date and status."
+  },
+  {
+    "table_schema": "sales_app",
+    "table_name": "order_items",
+    "cols": ["id"],
+    "description": "OLTP sales order line: product, quantity, unit price and discount."
+  },
+  {
+    "table_schema": "procurement",
+    "table_name": "suppliers",
+    "cols": ["id"],
+    "description": "OLTP supplier / vendor master: country and category."
+  },
+  {
+    "table_schema": "procurement",
+    "table_name": "purchase_orders",
+    "cols": ["id"],
+    "description": "OLTP purchase order header: supplier, store, order date and status."
+  },
+  {
+    "table_schema": "procurement",
+    "table_name": "purchase_order_items",
+    "cols": ["id"],
+    "description": "OLTP purchase order line: product, quantity ordered and unit cost."
+  }
+]
