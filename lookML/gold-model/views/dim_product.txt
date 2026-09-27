@@ -1,0 +1,64 @@
+view: dim_product {
+  sql_table_name: `my-company-prod-data-warehouse.gold_us.DimProduct` ;;
+
+  dimension: sk_product {
+    primary_key: yes
+    type: number
+    description: "Unique surrogate key for a specific version of a product's record."
+    sql: ${TABLE}.sk_product ;;
+  }
+  dimension: product_id {
+    type: number
+    sql: ${TABLE}.product_id ;;
+  }
+  dimension: product_name {
+    type: string
+    label: "Product Name"
+    sql: ${TABLE}.product_name ;;
+  }
+  dimension: category {
+    type: string
+    sql: ${TABLE}.category ;;
+  }
+  dimension: subcategory {
+    type: string
+    sql: ${TABLE}.subcategory ;;
+  }
+  dimension: unit_price {
+    type: number
+    value_format_name: usd
+    sql: ${TABLE}.unit_price ;;
+  }
+  dimension: unit_cost {
+    type: number
+    value_format_name: usd
+    sql: ${TABLE}.unit_cost ;;
+  }
+  dimension_group: valid_from {
+    type: time
+    timeframes: [raw, date, week, month, quarter, year]
+    sql: ${TABLE}.valid_from ;;
+  }
+  dimension_group: valid_to {
+    type: time
+    timeframes: [raw, date, week, month, quarter, year]
+    sql: ${TABLE}.valid_to ;;
+  }
+  dimension: is_valid {
+    type: yesno
+    sql: ${TABLE}.is_valid ;;
+  }
+
+  # ----- Measures -----
+  measure: product_count {
+    type: count_distinct
+    sql: ${product_id} ;;
+    description: "Unique number of products."
+    drill_fields: [product_id, product_name, category, subcategory]
+  }
+  measure: average_unit_price {
+    type: average
+    value_format_name: usd
+    sql: ${unit_price} ;;
+  }
+}

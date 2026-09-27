@@ -1,0 +1,25 @@
+config {
+    type: "view",
+    materialized: false,
+    database: require("../_project").target_project_warehouse,
+    schema: "silver_us",
+    tags: ["silver", "script"],
+}
+
+js {
+    const func_meta_columns = require("../func_meta_columns");
+}
+
+select
+    customer.customer_id
+    , customer.customer_name
+    , customer.email
+    , customer.city
+    , customer.state
+    , customer.country
+    , customer.customer_segment
+    , customer.created_at
+    , ${func_meta_columns.sql__valid_from(["customer"])} as valid_from
+    , ${func_meta_columns.sql__valid_to(["customer"])}   as valid_to
+    , (${func_meta_columns.sql__is_valid(["customer"])}) as is_valid
+from ${ref("bronze_us", "brz_customer")} as customer

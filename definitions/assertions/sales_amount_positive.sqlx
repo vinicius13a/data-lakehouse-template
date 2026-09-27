@@ -1,0 +1,15 @@
+config {
+    type: "assertion",
+    database: require("../_project").target_project_warehouse,
+    description: "FactSales net_amount and quantity must be non-negative on current records.",
+    tags: ["assertions", "sales"]
+}
+
+select
+    sk_sales
+    , quantity
+    , net_amount
+from ${ref("gold_us", "FactSales")}
+where
+    is_valid = true
+    and (quantity < 0 or net_amount < 0)

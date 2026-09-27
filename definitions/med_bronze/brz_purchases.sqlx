@@ -1,0 +1,36 @@
+config {
+    type: "view",
+    materialized: false,
+    database: require("../_project").target_project_warehouse,
+    schema: "bronze_us",
+    tags: ["bronze", "script"],
+    description: "Bronze view of purchase order lines. Temporal overlap join between purchase_orders and purchase_order_items.",
+}
+
+select
+    poi.id                 as purchase_order_item_id
+    , po.id                as purchase_order_id
+    , po.supplier_id
+    , po.store_id
+    , poi.product_id
+    , po.order_date
+    , po.status            as purchase_status
+    , poi.quantity         as quantity_ordered
+    , poi.unit_cost
+    , GREATEST(
+        COALESCE(po.valid_from, DATETIME("1970-01-01 00:00:00"))
+        , COALESCE(poi.valid_from, DATETIME("1970-01-01 00:00:00"))
+    )                      as valid_from
+    , LEAST(
+        COALESCE(po.valid_to, DATETIME("9999-12-31 00:00:00"))
+        , COALESCE(poi.valid_to, DATETIME("9999-12-31 00:00:00"))
+    )                      as valid_to
+from ${ref("historical__procurement", "purchase_order_items")} as poi
+inner join ${ref("historical__procurement", "purchase_orders")} as po
+    on
+        poi.purchase_order_id = po.id
+        and poi.valid_from < COALESCE(po.valid_to, DATETIME("9999-12-31 00:00:00"))
+        and COALESCE(poi.valid_to, DATETIME("9999-12-31 00:00:00")) > po.valid_from
+where
+    poi._metadata_change_type not in ('DELETE', 'UPDATE-DELETE')
+    and po._metadata_change_type not in ('DELETE', 'UPDATE-DELETE')

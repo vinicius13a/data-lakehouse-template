@@ -1,4 +1,4 @@
-# Data Lakehouse Template
+# Data Warehouse Template
 
 A reusable, **domain-agnostic** template for a dimensional data warehouse built with
 **Dataform** on **Google BigQuery**, following a **Medallion Architecture**

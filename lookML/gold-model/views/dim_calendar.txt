@@ -1,0 +1,48 @@
+view: dim_calendar {
+  sql_table_name: `my-company-prod-data-warehouse.gold_us.DimCalendar` ;;
+
+  dimension: sk_date {
+    primary_key: yes
+    type: number
+    description: "Surrogate key for the date in YYYYMMDD format (e.g., 20251001)."
+    sql: ${TABLE}.sk_date ;;
+  }
+  dimension_group: date_day {
+    type: time
+    timeframes: [raw, date, week, month, quarter, year]
+    sql: ${TABLE}.date_day ;;
+  }
+  dimension: year {
+    type: number
+    sql: ${TABLE}.year_ ;;
+  }
+  dimension: quarter {
+    type: number
+    sql: ${TABLE}.quarter_ ;;
+  }
+  dimension: month_number {
+    type: number
+    sql: ${TABLE}.month_number ;;
+  }
+  dimension: month_name {
+    type: string
+    sql: ${TABLE}.month_name ;;
+  }
+  dimension: day_of_week_name {
+    type: string
+    sql: ${TABLE}.day_of_week_name ;;
+  }
+  dimension: year_month {
+    type: string
+    sql: ${TABLE}.year_month ;;
+  }
+  dimension: is_weekend {
+    type: yesno
+    sql: ${TABLE}.is_weekend ;;
+  }
+
+  measure: date_count {
+    type: count
+    drill_fields: [date_day_date]
+  }
+}

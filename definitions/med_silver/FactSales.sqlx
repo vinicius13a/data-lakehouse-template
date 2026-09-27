@@ -1,0 +1,26 @@
+config {
+    type: "view",
+    materialized: false,
+    database: require("../_project").target_project_warehouse,
+    schema: "silver_us",
+    tags: ["silver", "script", "sales"],
+    description: "Sales fact at the order-line grain (1 row per order_item version).",
+}
+
+select
+    sales.order_item_id
+    , sales.order_id
+    , sales.customer_id
+    , sales.store_id
+    , sales.product_id
+    , sales.order_date
+    , sales.order_status
+    , sales.quantity
+    , sales.unit_price
+    , sales.discount_amount
+    -- Derived amounts
+    , (sales.quantity * sales.unit_price)                          as gross_amount
+    , (sales.quantity * sales.unit_price) - sales.discount_amount  as net_amount
+    , sales.valid_from
+    , sales.valid_to
+from ${ref("bronze_us", "brz_sales")} as sales

@@ -1,0 +1,35 @@
+config {
+    type: "assertion",
+    database: require("../_project").target_project_warehouse,
+    description: "Completeness / Validity checks for DimCustomer current records.",
+    tags: ["assertions", "customer"]
+}
+
+with dqcalculations as (
+    select
+        'Customer Master'                                                as metric_name
+        , 'dim_customer'                                                 as model_name
+        , COUNT(customer_id)                                             as total_customers
+        , SUM(case when customer_name is not null then 1 else 0 end)     as complete_count
+        , SUM(case when customer_segment in ('Consumer', 'Corporate', 'Home Office') then 1 else 0 end) as valid_count
+    from ${ref("gold_us", "DimCustomer")}
+    where is_valid = true
+)
+
+select
+    metric_name
+    , model_name
+    , 'Completeness'  as dq_dimension
+    , total_customers as total_rows
+    , complete_count  as compliant_rows
+from dqcalculations
+where total_customers > complete_count
+union all
+select
+    metric_name
+    , model_name
+    , 'Validity'     as dq_dimension
+    , total_customers as total_rows
+    , valid_count    as compliant_rows
+from dqcalculations
+where total_customers > valid_count

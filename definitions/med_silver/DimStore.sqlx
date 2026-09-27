@@ -1,0 +1,24 @@
+config {
+    type: "view",
+    materialized: false,
+    database: require("../_project").target_project_warehouse,
+    schema: "silver_us",
+    tags: ["silver", "script"],
+}
+
+js {
+    const func_meta_columns = require("../func_meta_columns");
+}
+
+select
+    store.store_id
+    , store.store_name
+    , store.region
+    , store.city
+    , store.state
+    , store.country
+    , store.store_type
+    , ${func_meta_columns.sql__valid_from(["store"])} as valid_from
+    , ${func_meta_columns.sql__valid_to(["store"])}   as valid_to
+    , (${func_meta_columns.sql__is_valid(["store"])}) as is_valid
+from ${ref("bronze_us", "brz_store")} as store

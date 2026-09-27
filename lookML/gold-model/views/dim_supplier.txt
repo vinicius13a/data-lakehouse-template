@@ -1,0 +1,45 @@
+view: dim_supplier {
+  sql_table_name: `my-company-prod-data-warehouse.gold_us.DimSupplier` ;;
+
+  dimension: sk_supplier {
+    primary_key: yes
+    type: number
+    description: "Unique surrogate key for a specific version of a supplier's record."
+    sql: ${TABLE}.sk_supplier ;;
+  }
+  dimension: supplier_id {
+    type: number
+    sql: ${TABLE}.supplier_id ;;
+  }
+  dimension: supplier_name {
+    type: string
+    label: "Supplier Name"
+    sql: ${TABLE}.supplier_name ;;
+  }
+  dimension: country {
+    type: string
+    sql: ${TABLE}.country ;;
+  }
+  dimension: supplier_category {
+    type: string
+    label: "Supplier Category"
+    sql: ${TABLE}.supplier_category ;;
+  }
+  dimension_group: valid_from {
+    type: time
+    timeframes: [raw, date, week, month, quarter, year]
+    sql: ${TABLE}.valid_from ;;
+  }
+  dimension: is_valid {
+    type: yesno
+    sql: ${TABLE}.is_valid ;;
+  }
+
+  # ----- Measures -----
+  measure: supplier_count {
+    type: count_distinct
+    sql: ${supplier_id} ;;
+    description: "Unique number of suppliers."
+    drill_fields: [supplier_id, supplier_name, country, supplier_category]
+  }
+}

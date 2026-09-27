@@ -1,0 +1,22 @@
+config {
+  type: "table",
+  database: require("../_project").target_project_warehouse,
+  schema: "gold_us",
+  tags: ["gold", "script", "dimension"],
+  description: "Dimension table for product details.",
+  columns: {
+    "sk_product": "Unique key for a specific version of a product's record. Links fact tables to the Product dimension for accurate historical analysis.",
+    "product_id": "The natural identification key for the product.",
+    "product_name": "The official name of the product.",
+    "category": "The product category (e.g., 'Furniture', 'Technology', 'Office Supplies').",
+    "subcategory": "The product subcategory.",
+    "unit_price": "The list selling price per unit.",
+    "unit_cost": "The unit cost of goods.",
+    "valid_from": "The date and time this version of the product's information became valid.",
+    "valid_to": "The date and time this version expired. A far-future date means it is the current record.",
+    "is_valid": "TRUE for the most current record for the product."
+  },
+}
+
+select dimproduct.* except (_meta_fingerprint_type1, _meta_fingerprint_type2)
+from ${ref("silver_us", "dynamic__DimProduct")} as dimproduct

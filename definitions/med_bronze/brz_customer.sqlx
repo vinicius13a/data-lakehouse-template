@@ -1,0 +1,26 @@
+config {
+    type: "view",
+    materialized: false,
+    database: require("../_project").target_project_warehouse,
+    schema: "bronze_us",
+    tags: ["bronze", "script"],
+    description: "Bronze view of the customer master. Renames source columns and applies CDC filtering.",
+}
+
+select
+    customers.id             as customer_id
+    , customers.full_name    as customer_name
+    , customers.email
+    , customers.city
+    , customers.state
+    , customers.country
+    , customers.segment      as customer_segment
+    , customers.created_at
+    , customers.valid_from
+    , customers.valid_to
+from ${ref("historical__sales_app", "customers")} as customers
+where customers._metadata_change_type not in ('DELETE', 'UPDATE-DELETE')
+qualify row_number() over (
+    partition by customers.id, customers.valid_from
+    order by customers.valid_from desc
+) = 1

@@ -1,0 +1,75 @@
+# Looker model for the Gold star schema.
+connection: "data-warehouse-gold"
+
+# Include all views and dashboards.
+include: "/views/*.txt"
+include: "/dashboard/*.txt"
+
+datagroup: gold_model_default_datagroup {
+  max_cache_age: "1 hour"
+}
+
+persist_with: gold_model_default_datagroup
+
+# =====================================================================
+# EXPLORES
+# Fact tables are the base; dimensions join via surrogate keys.
+# =====================================================================
+
+# ----- Sales Explore -----
+# Grain: one row per sales order line
+# Use for: revenue, discount, margin, product / store / customer analysis
+explore: fact_sales {
+  label: "Fact Sales"
+  description: "Sales order lines with full dimensional context. Use for revenue, discount and margin analysis."
+
+  join: dim_customer {
+    type: left_outer
+    relationship: many_to_one
+    sql_on: ${fact_sales.fk_customer} = ${dim_customer.sk_customer} ;;
+  }
+  join: dim_product {
+    type: left_outer
+    relationship: many_to_one
+    sql_on: ${fact_sales.fk_product} = ${dim_product.sk_product} ;;
+  }
+  join: dim_store {
+    type: left_outer
+    relationship: many_to_one
+    sql_on: ${fact_sales.fk_store} = ${dim_store.sk_store} ;;
+  }
+  join: dim_calendar {
+    type: left_outer
+    relationship: many_to_one
+    sql_on: ${dim_calendar.sk_date} = ${fact_sales.fk_date_order} ;;
+  }
+}
+
+# ----- Purchases Explore -----
+# Grain: one row per purchase order line
+# Use for: procurement spend, supplier analysis, cost tracking
+explore: fact_purchases {
+  label: "Fact Purchases"
+  description: "Purchase order lines with full dimensional context. Use for procurement spend and supplier analysis."
+
+  join: dim_supplier {
+    type: left_outer
+    relationship: many_to_one
+    sql_on: ${fact_purchases.fk_supplier} = ${dim_supplier.sk_supplier} ;;
+  }
+  join: dim_product {
+    type: left_outer
+    relationship: many_to_one
+    sql_on: ${fact_purchases.fk_product} = ${dim_product.sk_product} ;;
+  }
+  join: dim_store {
+    type: left_outer
+    relationship: many_to_one
+    sql_on: ${fact_purchases.fk_store} = ${dim_store.sk_store} ;;
+  }
+  join: dim_calendar {
+    type: left_outer
+    relationship: many_to_one
+    sql_on: ${dim_calendar.sk_date} = ${fact_purchases.fk_date_order} ;;
+  }
+}

@@ -1,0 +1,17 @@
+config {
+    type: "assertion",
+    database: require("../_project").target_project_warehouse,
+    description: "Every current FactSales row must resolve to a Product in DimProduct.",
+    tags: ["assertions", "sales"]
+}
+
+select
+    f.sk_sales
+    , f.fk_product
+from ${ref("gold_us", "FactSales")} as f
+left join ${ref("gold_us", "DimProduct")} as d
+    on f.fk_product = d.sk_product
+where
+    f.is_valid = true
+    and f.fk_product is not null
+    and d.sk_product is null

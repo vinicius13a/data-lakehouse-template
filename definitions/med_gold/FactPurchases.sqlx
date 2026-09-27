@@ -1,0 +1,104 @@
+config {
+  type: "incremental",
+  uniqueKey: ["sk_purchase"],
+  database: require("../_project").target_project_warehouse,
+  schema: "gold_us",
+  tags: ["gold", "fact", "script", "purchases"],
+  description: "Purchase fact at the purchase-order-line grain (1 row per PO line). Resolves dimension foreign keys as of the line's valid_from.",
+  columns: {
+      "sk_purchase": "The unique surrogate key for this purchase order line version.",
+      "fk_supplier": "Key linking to the Supplier dimension *as of the order date*.",
+      "fk_product": "Key linking to the Product dimension *as of the order date*.",
+      "fk_store": "Key linking to the Store dimension *as of the order date*.",
+      "fk_date_order": "Key linking to the Calendar dimension for the order date (YYYYMMDD).",
+      "fk_valid_from": "Key linking to the Calendar dimension for the date this record became valid (YYYYMMDD).",
+      "fk_valid_to": "Key linking to the Calendar dimension for the date this record expired (YYYYMMDD).",
+      "purchase_order_id": "The purchase order header identifier this line belongs to.",
+      "purchase_order_item_id": "The natural key of the purchase order line.",
+      "order_date": "The date the purchase order was placed.",
+      "purchase_status": "The status of the purchase order (e.g., 'Open', 'Received', 'Cancelled').",
+      "quantity_ordered": "Units ordered on this line.",
+      "unit_cost": "Cost per unit.",
+      "total_cost": "quantity_ordered * unit_cost.",
+      "valid_from": "The datetime this version of the record became valid.",
+      "valid_to": "The datetime this version expired. A far-future date means it is the current record.",
+      "is_valid": "TRUE for the most current version of this PO line."
+  },
+  bigquery: {
+    partitionBy: "DATE(order_date)",
+    clusterBy: ["fk_supplier", "fk_product"]
+  }
+}
+
+-- 1: Resolve DimSupplier surrogate key
+with supplier_sk_resolved as (
+    select
+        p.sk_purchase
+        , ds.sk_supplier
+    from ${ref("silver_us", "dynamic__FactPurchases")} as p
+    inner join ${ref("silver_us", "dynamic__DimSupplier")} as ds
+        on p.supplier_id = ds.supplier_id and p.valid_from >= ds.valid_from
+    qualify row_number() over (partition by p.sk_purchase order by ds.valid_from desc) = 1
+)
+
+-- 2: Resolve DimProduct surrogate key
+, product_sk_resolved as (
+    select
+        p.sk_purchase
+        , dp.sk_product
+    from ${ref("silver_us", "dynamic__FactPurchases")} as p
+    inner join ${ref("silver_us", "dynamic__DimProduct")} as dp
+        on p.product_id = dp.product_id and p.valid_from >= dp.valid_from
+    qualify row_number() over (partition by p.sk_purchase order by dp.valid_from desc) = 1
+)
+
+-- 3: Resolve DimStore surrogate key
+, store_sk_resolved as (
+    select
+        p.sk_purchase
+        , dst.sk_store
+    from ${ref("silver_us", "dynamic__FactPurchases")} as p
+    inner join ${ref("silver_us", "dynamic__DimStore")} as dst
+        on p.store_id = dst.store_id and p.valid_from >= dst.valid_from
+    qualify row_number() over (partition by p.sk_purchase order by dst.valid_from desc) = 1
+)
+
+-- 4: Final query
+select
+    p.sk_purchase
+    , p.purchase_order_id
+    , p.purchase_order_item_id
+    , p.order_date
+    , p.purchase_status
+    , p.quantity_ordered
+    , p.unit_cost
+    , p.total_cost
+    , p.valid_from
+    , p.valid_to
+    , supplier.sk_supplier                                                   as fk_supplier
+    , product.sk_product                                                     as fk_product
+    , store.sk_store                                                         as fk_store
+    , cast(format_date('%Y%m%d', DATE(p.order_date)) as int64)               as fk_date_order
+    , cast(format_date('%Y%m%d', DATE(p.valid_from)) as int64)               as fk_valid_from
+    , cast(format_date('%Y%m%d', DATE(p.valid_to)) as int64)                 as fk_valid_to
+    , (p.valid_to is null or p.valid_to = DATETIME('9999-12-31 00:00:00'))   as is_valid
+from ${ref("silver_us", "dynamic__FactPurchases")} as p
+left join supplier_sk_resolved as supplier on p.sk_purchase = supplier.sk_purchase
+left join product_sk_resolved as product on p.sk_purchase = product.sk_purchase
+left join store_sk_resolved as store on p.sk_purchase = store.sk_purchase
+
+${ when(incremental(), `
+where p.valid_from > (select max(valid_from) from ${self()})
+   or coalesce(p.valid_to, datetime('9999-12-31 00:00:00')) > (select max(valid_from) from ${self()})
+`) }
+
+post_operations {
+    ${ when(incremental(), `
+    delete from ${self()} as t
+    where not exists (
+        select 1
+        from ${ref("silver_us", "dynamic__FactPurchases")} as src
+        where src.sk_purchase = t.sk_purchase
+    )
+    `) }
+}

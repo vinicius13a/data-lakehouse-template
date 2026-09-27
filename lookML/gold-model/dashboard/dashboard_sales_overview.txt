@@ -1,0 +1,171 @@
+---
+- dashboard: sales_overview
+  title: "Sales Overview"
+  layout: newspaper
+  preferred_viewer: dashboards-next
+  crossfilter_enabled: true
+  description: "Sample sales dashboard: net revenue, units, discounts and breakdowns by product category, region and customer segment."
+
+  filters:
+  - name: Date Range
+    title: Date Range
+    type: date_filter
+    default_value: "12 months"
+    allow_multiple_values: false
+    required: false
+    ui_config:
+      type: relative_timeframes
+      display: inline
+
+  - name: Product Category
+    title: Product Category
+    type: field_filter
+    default_value: ''
+    allow_multiple_values: true
+    required: false
+    ui_config:
+      type: checkboxes
+      display: popover
+    model: gold-model
+    explore: fact_sales
+    field: dim_product.category
+
+  - name: Region
+    title: Region
+    type: field_filter
+    default_value: ''
+    allow_multiple_values: true
+    required: false
+    ui_config:
+      type: checkboxes
+      display: popover
+    model: gold-model
+    explore: fact_sales
+    field: dim_store.region
+
+  elements:
+
+  # ═══════════════════════════════════════════════════════════════
+  # SECTION 1 — KPIs
+  # ═══════════════════════════════════════════════════════════════
+
+  - title: ''
+    name: section_sales_kpi
+    type: text
+    title_text: "<font color='#FFFFFF'><b>Sales — Key Metrics</b></font>"
+    subtitle_text: "<font color='#FFFFFF' size='2'>is_valid = Yes · selected period</font>"
+    body_text: ''
+    row: 0
+    col: 0
+    width: 24
+    height: 2
+    background_color: "#1976D2"
+
+  - title: Net Revenue
+    name: kpi_net_revenue
+    model: gold-model
+    explore: fact_sales
+    type: single_value
+    fields: [fact_sales.total_net_revenue]
+    filters:
+      fact_sales.is_valid: 'Yes'
+    listen:
+      Date Range: fact_sales.order_date
+      Product Category: dim_product.category
+      Region: dim_store.region
+    row: 2
+    col: 0
+    width: 8
+    height: 4
+
+  - title: Units Sold
+    name: kpi_units
+    model: gold-model
+    explore: fact_sales
+    type: single_value
+    fields: [fact_sales.total_quantity]
+    filters:
+      fact_sales.is_valid: 'Yes'
+    listen:
+      Date Range: fact_sales.order_date
+      Product Category: dim_product.category
+      Region: dim_store.region
+    row: 2
+    col: 8
+    width: 8
+    height: 4
+
+  - title: Total Discount
+    name: kpi_discount
+    model: gold-model
+    explore: fact_sales
+    type: single_value
+    fields: [fact_sales.total_discount]
+    filters:
+      fact_sales.is_valid: 'Yes'
+    listen:
+      Date Range: fact_sales.order_date
+      Product Category: dim_product.category
+      Region: dim_store.region
+    row: 2
+    col: 16
+    width: 8
+    height: 4
+
+  # ═══════════════════════════════════════════════════════════════
+  # SECTION 2 — TRENDS & BREAKDOWNS
+  # ═══════════════════════════════════════════════════════════════
+
+  - title: Net Revenue by Month
+    name: revenue_by_month
+    model: gold-model
+    explore: fact_sales
+    type: looker_column
+    fields: [dim_calendar.year_month, fact_sales.total_net_revenue]
+    sorts: [dim_calendar.year_month]
+    filters:
+      fact_sales.is_valid: 'Yes'
+    listen:
+      Date Range: fact_sales.order_date
+      Product Category: dim_product.category
+      Region: dim_store.region
+    row: 6
+    col: 0
+    width: 24
+    height: 8
+
+  - title: Net Revenue by Product Category
+    name: revenue_by_category
+    model: gold-model
+    explore: fact_sales
+    type: looker_bar
+    fields: [dim_product.category, fact_sales.total_net_revenue]
+    sorts: [fact_sales.total_net_revenue desc]
+    filters:
+      fact_sales.is_valid: 'Yes'
+    listen:
+      Date Range: fact_sales.order_date
+      Product Category: dim_product.category
+      Region: dim_store.region
+    row: 14
+    col: 0
+    width: 12
+    height: 8
+
+  - title: Net Revenue by Customer Segment
+    name: revenue_by_segment
+    model: gold-model
+    explore: fact_sales
+    type: looker_pie
+    fields: [dim_customer.customer_segment, fact_sales.total_net_revenue]
+    sorts: [fact_sales.total_net_revenue desc]
+    filters:
+      fact_sales.is_valid: 'Yes'
+    listen:
+      Date Range: fact_sales.order_date
+      Product Category: dim_product.category
+      Region: dim_store.region
+    row: 14
+    col: 12
+    width: 12
+    height: 8

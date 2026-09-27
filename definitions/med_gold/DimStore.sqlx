@@ -1,0 +1,23 @@
+config {
+  type: "table",
+  database: require("../_project").target_project_warehouse,
+  schema: "gold_us",
+  tags: ["gold", "script", "dimension"],
+  description: "Dimension table for store / location details.",
+  columns: {
+    "sk_store": "Unique key for a specific version of a store's record. Links fact tables to the Store dimension for accurate historical analysis.",
+    "store_id": "The natural identification key for the store.",
+    "store_name": "The official name of the store.",
+    "region": "The sales region the store belongs to (e.g., 'East', 'West', 'Central', 'South').",
+    "city": "City where the store is located.",
+    "state": "State / province where the store is located.",
+    "country": "Country where the store is located.",
+    "store_type": "The type of store (e.g., 'Flagship', 'Outlet', 'Online', 'Pop-up').",
+    "valid_from": "The date and time this version of the store's information became valid.",
+    "valid_to": "The date and time this version expired. A far-future date means it is the current record.",
+    "is_valid": "TRUE for the most current record for the store."
+  },
+}
+
+select dimstore.* except (_meta_fingerprint_type1, _meta_fingerprint_type2)
+from ${ref("silver_us", "dynamic__DimStore")} as dimstore

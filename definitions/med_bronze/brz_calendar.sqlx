@@ -1,0 +1,54 @@
+config {
+  type: "table",
+  schema: "bronze_us",
+  database: require("../_project").target_project_warehouse,
+  tags: ["bronze", "script"],
+  description: "Bronze calendar table with detailed date attributes (1900-2050).",
+}
+
+with date_range as (
+    select TIMESTAMP(date_day) as date_day
+    from
+        UNNEST(GENERATE_DATE_ARRAY('1900-01-01', '2050-12-31', interval 1 day)) as date_day
+)
+
+select
+    date_day
+
+    , CAST(FORMAT_TIMESTAMP('%Y%m%d', date_day, 'UTC') as INT64)  as sk_date -- Surrogate Key (e.g., 20251001)
+
+    , EXTRACT(year from date_day)                                 as year_
+    , EXTRACT(quarter from date_day)                              as quarter_
+    , EXTRACT(month from date_day)                                as month_number
+    , EXTRACT(week from date_day)                                 as week_of_year_number -- Week starts on Sunday
+    , EXTRACT(isoweek from date_day)                              as iso_week_of_year_number -- ISO 8601, Monday
+    , EXTRACT(day from date_day)                                  as day_of_month
+    , EXTRACT(dayofyear from date_day)                            as day_of_year
+    , EXTRACT(dayofweek from date_day)                            as day_of_week_number -- 1=Sunday ... 7=Saturday
+
+    , case EXTRACT(month from date_day)
+        when 1 then 'January' when 2 then 'February' when 3 then 'March'
+        when 4 then 'April' when 5 then 'May' when 6 then 'June'
+        when 7 then 'July' when 8 then 'August' when 9 then 'September'
+        when 10 then 'October' when 11 then 'November' when 12 then 'December'
+    end                                                           as month_name
+    , case EXTRACT(dayofweek from date_day)
+        when 1 then 'Sunday' when 2 then 'Monday'
+        when 3 then 'Tuesday' when 4 then 'Wednesday'
+        when 5 then 'Thursday' when 6 then 'Friday'
+        when 7 then 'Saturday'
+    end                                                           as day_of_week_name
+
+    , FORMAT_TIMESTAMP('%Y-%m', date_day, 'UTC')                  as year_month
+    , FORMAT_TIMESTAMP('%m-%d-%Y', date_day, 'UTC')               as formatted_date
+
+    , COALESCE(EXTRACT(dayofweek from date_day) in (1, 7), false) as is_weekend
+
+    , DATE_TRUNC(date_day, month)                                 as first_day_of_month
+    , TIMESTAMP(LAST_DAY(DATE(date_day, 'UTC'), month))           as last_day_of_month
+    , DATE_TRUNC(date_day, quarter)                               as first_day_of_quarter
+    , TIMESTAMP(LAST_DAY(DATE(date_day, 'UTC'), quarter))         as last_day_of_quarter
+    , DATE_TRUNC(date_day, isoweek)                               as first_day_of_iso_week
+    , DATE_ADD(DATE_TRUNC(date_day, isoweek), interval 6 day)     as last_day_of_iso_week
+from
+    date_range

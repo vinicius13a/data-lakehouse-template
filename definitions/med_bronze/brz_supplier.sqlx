@@ -1,0 +1,22 @@
+config {
+    type: "view",
+    materialized: false,
+    database: require("../_project").target_project_warehouse,
+    schema: "bronze_us",
+    tags: ["bronze", "script"],
+    description: "Bronze view of the supplier / vendor master. Renames source columns and applies CDC filtering.",
+}
+
+select
+    suppliers.id          as supplier_id
+    , suppliers.name      as supplier_name
+    , suppliers.country
+    , suppliers.category  as supplier_category
+    , suppliers.valid_from
+    , suppliers.valid_to
+from ${ref("historical__procurement", "suppliers")} as suppliers
+where suppliers._metadata_change_type not in ('DELETE', 'UPDATE-DELETE')
+qualify row_number() over (
+    partition by suppliers.id, suppliers.valid_from
+    order by suppliers.valid_from desc
+) = 1

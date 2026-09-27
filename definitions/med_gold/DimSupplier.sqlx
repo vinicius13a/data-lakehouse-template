@@ -1,0 +1,20 @@
+config {
+  type: "table",
+  database: require("../_project").target_project_warehouse,
+  schema: "gold_us",
+  tags: ["gold", "script", "dimension"],
+  description: "Dimension table for supplier / vendor details.",
+  columns: {
+    "sk_supplier": "Unique key for a specific version of a supplier's record. Links fact tables to the Supplier dimension for accurate historical analysis.",
+    "supplier_id": "The natural identification key for the supplier.",
+    "supplier_name": "The official name of the supplier.",
+    "country": "Country where the supplier is based.",
+    "supplier_category": "The category of goods the supplier provides.",
+    "valid_from": "The date and time this version of the supplier's information became valid.",
+    "valid_to": "The date and time this version expired. A far-future date means it is the current record.",
+    "is_valid": "TRUE for the most current record for the supplier."
+  },
+}
+
+select dimsupplier.* except (_meta_fingerprint_type1, _meta_fingerprint_type2)
+from ${ref("silver_us", "dynamic__DimSupplier")} as dimsupplier

@@ -1,0 +1,23 @@
+config {
+    type: "view",
+    materialized: false,
+    database: require("../_project").target_project_warehouse,
+    schema: "silver_us",
+    tags: ["silver", "script", "purchases"],
+    description: "Purchase fact at the purchase-order-line grain (1 row per purchase_order_item version).",
+}
+
+select
+    purchases.purchase_order_item_id
+    , purchases.purchase_order_id
+    , purchases.supplier_id
+    , purchases.store_id
+    , purchases.product_id
+    , purchases.order_date
+    , purchases.purchase_status
+    , purchases.quantity_ordered
+    , purchases.unit_cost
+    , (purchases.quantity_ordered * purchases.unit_cost) as total_cost
+    , purchases.valid_from
+    , purchases.valid_to
+from ${ref("bronze_us", "brz_purchases")} as purchases

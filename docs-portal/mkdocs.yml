@@ -1,0 +1,79 @@
+site_name: Data Governance Portal
+site_description: Data warehouse documentation — catalog, lineage and business rules (template)
+site_url: ""
+
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Light mode
+  font:
+    text: Poppins
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+    - toc.follow
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+
+plugins:
+  - search:
+      lang:
+        - en
+
+extra:
+  generator: false
+
+nav:
+  - Home: index.md
+  - Data Catalog:
+    - catalogo/index.md
+    - Dimensions:
+      - DimCalendar: catalogo/dimensoes/dim_calendar.md
+      - DimCustomer: catalogo/dimensoes/dim_customer.md
+      - DimProduct: catalogo/dimensoes/dim_product.md
+      - DimStore: catalogo/dimensoes/dim_store.md
+      - DimSupplier: catalogo/dimensoes/dim_supplier.md
+    - Facts:
+      - FactSales: catalogo/fatos/fact_sales.md
+      - FactPurchases: catalogo/fatos/fact_purchases.md

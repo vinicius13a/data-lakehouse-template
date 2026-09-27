@@ -1,0 +1,96 @@
+view: fact_purchases {
+  sql_table_name: `my-company-prod-data-warehouse.gold_us.FactPurchases` ;;
+
+  # ----- Surrogate & Foreign Keys -----
+  dimension: sk_purchase {
+    primary_key: yes
+    type: number
+    description: "Unique surrogate key for this purchase order line version."
+    sql: ${TABLE}.sk_purchase ;;
+  }
+  dimension: fk_supplier {
+    type: number
+    hidden: yes
+    sql: ${TABLE}.fk_supplier ;;
+  }
+  dimension: fk_product {
+    type: number
+    hidden: yes
+    sql: ${TABLE}.fk_product ;;
+  }
+  dimension: fk_store {
+    type: number
+    hidden: yes
+    sql: ${TABLE}.fk_store ;;
+  }
+  dimension: fk_date_order {
+    type: number
+    hidden: yes
+    sql: ${TABLE}.fk_date_order ;;
+  }
+
+  # ----- Identifiers -----
+  dimension: purchase_order_id {
+    type: number
+    sql: ${TABLE}.purchase_order_id ;;
+  }
+  dimension: purchase_order_item_id {
+    type: number
+    sql: ${TABLE}.purchase_order_item_id ;;
+  }
+  dimension: purchase_status {
+    type: string
+    label: "Purchase Status"
+    sql: ${TABLE}.purchase_status ;;
+  }
+
+  # ----- Dates -----
+  dimension_group: order {
+    type: time
+    timeframes: [raw, date, week, month, quarter, year]
+    datatype: datetime
+    sql: ${TABLE}.order_date ;;
+  }
+
+  # ----- Line attributes -----
+  dimension: quantity_ordered {
+    type: number
+    sql: ${TABLE}.quantity_ordered ;;
+  }
+  dimension: unit_cost {
+    type: number
+    value_format_name: usd
+    sql: ${TABLE}.unit_cost ;;
+  }
+  dimension: total_cost {
+    type: number
+    value_format_name: usd
+    sql: ${TABLE}.total_cost ;;
+  }
+  dimension: is_valid {
+    type: yesno
+    sql: ${TABLE}.is_valid ;;
+  }
+
+  # ----- Measures -----
+  measure: purchase_line_count {
+    type: count
+    description: "Number of purchase order lines."
+  }
+  measure: total_quantity_ordered {
+    type: sum
+    sql: ${quantity_ordered} ;;
+    description: "Total units ordered from suppliers."
+  }
+  measure: total_procurement_spend {
+    type: sum
+    value_format_name: usd
+    sql: ${total_cost} ;;
+    description: "Total procurement spend."
+  }
+  measure: average_unit_cost {
+    type: average
+    value_format_name: usd
+    sql: ${unit_cost} ;;
+  }
+}

@@ -1,0 +1,33 @@
+config {
+  type: "table",
+  schema: "gold_us",
+  database: require("../_project").target_project_warehouse,
+  tags: ["gold", "script", "dimension"],
+  description: "Calendar dimension with detailed date attributes.",
+  columns: {
+        "date_day": "Full date in TIMESTAMP format.",
+        "sk_date": "Surrogate key for the date in YYYYMMDD format (e.g., 20251001).",
+        "year_": "Year (e.g., 2025).",
+        "quarter_": "Quarter of the year (1-4).",
+        "month_number": "Month number (1-12).",
+        "week_of_year_number": "Week number of the year (week starts on Sunday).",
+        "iso_week_of_year_number": "ISO 8601 week number of the year (week starts on Monday).",
+        "day_of_month": "Day number of the month (1-31).",
+        "day_of_year": "Day number of the year (1-366).",
+        "day_of_week_number": "Day number of the week (1=Sunday ... 7=Saturday).",
+        "month_name": "Full name of the month (e.g., 'January').",
+        "day_of_week_name": "Full name of the day of the week (e.g., 'Monday').",
+        "year_month": "Formatted year and month (YYYY-MM).",
+        "formatted_date": "Formatted date in US standard (MM-DD-YYYY).",
+        "is_weekend": "Flag (TRUE/FALSE) indicating if the day is a weekend.",
+        "first_day_of_month": "Timestamp of the first day of the month.",
+        "last_day_of_month": "Timestamp of the last day of the month.",
+        "first_day_of_quarter": "Timestamp of the first day of the quarter.",
+        "last_day_of_quarter": "Timestamp of the last day of the quarter.",
+        "first_day_of_iso_week": "Timestamp of the first day of the ISO week (Monday).",
+        "last_day_of_iso_week": "Timestamp of the last day of the ISO week (Sunday)."
+  },
+}
+
+select dimcalendar.*
+from ${ref("bronze_us", "brz_calendar")} as dimcalendar

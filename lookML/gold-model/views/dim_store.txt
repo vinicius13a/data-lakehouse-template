@@ -1,0 +1,57 @@
+view: dim_store {
+  sql_table_name: `my-company-prod-data-warehouse.gold_us.DimStore` ;;
+
+  dimension: sk_store {
+    primary_key: yes
+    type: number
+    description: "Unique surrogate key for a specific version of a store's record."
+    sql: ${TABLE}.sk_store ;;
+  }
+  dimension: store_id {
+    type: number
+    sql: ${TABLE}.store_id ;;
+  }
+  dimension: store_name {
+    type: string
+    label: "Store Name"
+    sql: ${TABLE}.store_name ;;
+  }
+  dimension: region {
+    type: string
+    sql: ${TABLE}.region ;;
+  }
+  dimension: city {
+    type: string
+    sql: ${TABLE}.city ;;
+  }
+  dimension: state {
+    type: string
+    sql: ${TABLE}.state ;;
+  }
+  dimension: country {
+    type: string
+    sql: ${TABLE}.country ;;
+  }
+  dimension: store_type {
+    type: string
+    label: "Store Type"
+    sql: ${TABLE}.store_type ;;
+  }
+  dimension_group: valid_from {
+    type: time
+    timeframes: [raw, date, week, month, quarter, year]
+    sql: ${TABLE}.valid_from ;;
+  }
+  dimension: is_valid {
+    type: yesno
+    sql: ${TABLE}.is_valid ;;
+  }
+
+  # ----- Measures -----
+  measure: store_count {
+    type: count_distinct
+    sql: ${store_id} ;;
+    description: "Unique number of stores."
+    drill_fields: [store_id, store_name, region, store_type]
+  }
+}

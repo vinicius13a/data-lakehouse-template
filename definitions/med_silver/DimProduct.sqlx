@@ -1,0 +1,23 @@
+config {
+    type: "view",
+    materialized: false,
+    database: require("../_project").target_project_warehouse,
+    schema: "silver_us",
+    tags: ["silver", "script"],
+}
+
+js {
+    const func_meta_columns = require("../func_meta_columns");
+}
+
+select
+    product.product_id
+    , product.product_name
+    , product.category
+    , product.subcategory
+    , product.unit_price
+    , product.unit_cost
+    , ${func_meta_columns.sql__valid_from(["product"])} as valid_from
+    , ${func_meta_columns.sql__valid_to(["product"])}   as valid_to
+    , (${func_meta_columns.sql__is_valid(["product"])}) as is_valid
+from ${ref("bronze_us", "brz_product")} as product

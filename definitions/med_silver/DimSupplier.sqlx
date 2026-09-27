@@ -1,0 +1,21 @@
+config {
+    type: "view",
+    materialized: false,
+    database: require("../_project").target_project_warehouse,
+    schema: "silver_us",
+    tags: ["silver", "script"],
+}
+
+js {
+    const func_meta_columns = require("../func_meta_columns");
+}
+
+select
+    supplier.supplier_id
+    , supplier.supplier_name
+    , supplier.country
+    , supplier.supplier_category
+    , ${func_meta_columns.sql__valid_from(["supplier"])} as valid_from
+    , ${func_meta_columns.sql__valid_to(["supplier"])}   as valid_to
+    , (${func_meta_columns.sql__is_valid(["supplier"])}) as is_valid
+from ${ref("bronze_us", "brz_supplier")} as supplier

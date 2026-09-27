@@ -1,0 +1,118 @@
+view: fact_sales {
+  sql_table_name: `my-company-prod-data-warehouse.gold_us.FactSales` ;;
+
+  # ----- Surrogate & Foreign Keys -----
+  dimension: sk_sales {
+    primary_key: yes
+    type: number
+    description: "Unique surrogate key for this sales order line version."
+    sql: ${TABLE}.sk_sales ;;
+  }
+  dimension: fk_customer {
+    type: number
+    hidden: yes
+    sql: ${TABLE}.fk_customer ;;
+  }
+  dimension: fk_product {
+    type: number
+    hidden: yes
+    sql: ${TABLE}.fk_product ;;
+  }
+  dimension: fk_store {
+    type: number
+    hidden: yes
+    sql: ${TABLE}.fk_store ;;
+  }
+  dimension: fk_date_order {
+    type: number
+    hidden: yes
+    sql: ${TABLE}.fk_date_order ;;
+  }
+
+  # ----- Identifiers -----
+  dimension: order_id {
+    type: number
+    sql: ${TABLE}.order_id ;;
+  }
+  dimension: order_item_id {
+    type: number
+    sql: ${TABLE}.order_item_id ;;
+  }
+  dimension: order_status {
+    type: string
+    label: "Order Status"
+    sql: ${TABLE}.order_status ;;
+  }
+
+  # ----- Dates -----
+  dimension_group: order {
+    type: time
+    timeframes: [raw, date, week, month, quarter, year]
+    datatype: datetime
+    sql: ${TABLE}.order_date ;;
+  }
+
+  # ----- Line attributes -----
+  dimension: quantity {
+    type: number
+    sql: ${TABLE}.quantity ;;
+  }
+  dimension: unit_price {
+    type: number
+    value_format_name: usd
+    sql: ${TABLE}.unit_price ;;
+  }
+  dimension: discount_amount {
+    type: number
+    value_format_name: usd
+    sql: ${TABLE}.discount_amount ;;
+  }
+  dimension: gross_amount {
+    type: number
+    value_format_name: usd
+    sql: ${TABLE}.gross_amount ;;
+  }
+  dimension: net_amount {
+    type: number
+    value_format_name: usd
+    sql: ${TABLE}.net_amount ;;
+  }
+  dimension: is_valid {
+    type: yesno
+    sql: ${TABLE}.is_valid ;;
+  }
+
+  # ----- Measures -----
+  measure: sales_line_count {
+    type: count
+    description: "Number of sales order lines."
+  }
+  measure: total_quantity {
+    type: sum
+    sql: ${quantity} ;;
+    description: "Total units sold."
+  }
+  measure: total_gross_amount {
+    type: sum
+    value_format_name: usd
+    sql: ${gross_amount} ;;
+    description: "Total gross sales amount (before discount)."
+  }
+  measure: total_discount {
+    type: sum
+    value_format_name: usd
+    sql: ${discount_amount} ;;
+    description: "Total discount granted."
+  }
+  measure: total_net_revenue {
+    type: sum
+    value_format_name: usd
+    sql: ${net_amount} ;;
+    description: "Total net revenue (gross minus discount)."
+  }
+  measure: average_order_line_value {
+    type: average
+    value_format_name: usd
+    sql: ${net_amount} ;;
+  }
+}

@@ -1,0 +1,24 @@
+config {
+  type: "table",
+  database: require("../_project").target_project_warehouse,
+  schema: "gold_us",
+  tags: ["gold", "script", "dimension"],
+  description: "Dimension table for customer details.",
+  columns: {
+    "sk_customer": "Unique key for a specific version of a customer's record. Links fact tables to the Customer dimension for accurate historical analysis.",
+    "customer_id": "The natural identification key for the customer.",
+    "customer_name": "The full name of the customer.",
+    "email": "The customer's email address.",
+    "city": "City of the customer's address.",
+    "state": "State / province of the customer's address.",
+    "country": "Country of the customer's address.",
+    "customer_segment": "Business segment the customer belongs to (e.g., 'Consumer', 'Corporate', 'Home Office').",
+    "created_at": "The date and time the customer record was originally created.",
+    "valid_from": "The date and time this version of the customer's information became valid.",
+    "valid_to": "The date and time this version expired. A far-future date means it is the current record.",
+    "is_valid": "TRUE for the most current record for the customer."
+  },
+}
+
+select dimcustomer.* except (_meta_fingerprint_type1, _meta_fingerprint_type2)
+from ${ref("silver_us", "dynamic__DimCustomer")} as dimcustomer

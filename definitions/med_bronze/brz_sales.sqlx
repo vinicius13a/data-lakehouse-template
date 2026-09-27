@@ -1,0 +1,38 @@
+config {
+    type: "view",
+    materialized: false,
+    database: require("../_project").target_project_warehouse,
+    schema: "bronze_us",
+    tags: ["bronze", "script"],
+    description: "Bronze view of sales order lines. Temporal overlap join between orders and order_items.",
+}
+
+select
+    order_items.id              as order_item_id
+    , orders.id                 as order_id
+    , orders.customer_id
+    , orders.store_id
+    , order_items.product_id
+    , orders.order_date
+    , orders.status             as order_status
+    , order_items.quantity
+    , order_items.unit_price
+    , order_items.discount_amount
+    -- Version validity = overlap of the two temporal sources
+    , GREATEST(
+        COALESCE(orders.valid_from, DATETIME("1970-01-01 00:00:00"))
+        , COALESCE(order_items.valid_from, DATETIME("1970-01-01 00:00:00"))
+    )                           as valid_from
+    , LEAST(
+        COALESCE(orders.valid_to, DATETIME("9999-12-31 00:00:00"))
+        , COALESCE(order_items.valid_to, DATETIME("9999-12-31 00:00:00"))
+    )                           as valid_to
+from ${ref("historical__sales_app", "order_items")} as order_items
+inner join ${ref("historical__sales_app", "orders")} as orders
+    on
+        order_items.order_id = orders.id
+        and order_items.valid_from < COALESCE(orders.valid_to, DATETIME("9999-12-31 00:00:00"))
+        and COALESCE(order_items.valid_to, DATETIME("9999-12-31 00:00:00")) > orders.valid_from
+where
+    order_items._metadata_change_type not in ('DELETE', 'UPDATE-DELETE')
+    and orders._metadata_change_type not in ('DELETE', 'UPDATE-DELETE')

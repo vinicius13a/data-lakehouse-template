@@ -1,0 +1,24 @@
+config {
+    type: "view",
+    materialized: false,
+    database: require("../_project").target_project_warehouse,
+    schema: "bronze_us",
+    tags: ["bronze", "script"],
+    description: "Bronze view of the product catalog. Renames source columns and applies CDC filtering.",
+}
+
+select
+    products.id            as product_id
+    , products.name        as product_name
+    , products.category
+    , products.subcategory
+    , products.unit_price
+    , products.unit_cost
+    , products.valid_from
+    , products.valid_to
+from ${ref("historical__sales_app", "products")} as products
+where products._metadata_change_type not in ('DELETE', 'UPDATE-DELETE')
+qualify row_number() over (
+    partition by products.id, products.valid_from
+    order by products.valid_from desc
+) = 1

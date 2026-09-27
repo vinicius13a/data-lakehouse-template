@@ -1,0 +1,25 @@
+config {
+    type: "view",
+    materialized: false,
+    database: require("../_project").target_project_warehouse,
+    schema: "bronze_us",
+    tags: ["bronze", "script"],
+    description: "Bronze view of the store / location master. Renames source columns and applies CDC filtering.",
+}
+
+select
+    stores.id           as store_id
+    , stores.name       as store_name
+    , stores.region
+    , stores.city
+    , stores.state
+    , stores.country
+    , stores.store_type
+    , stores.valid_from
+    , stores.valid_to
+from ${ref("historical__sales_app", "stores")} as stores
+where stores._metadata_change_type not in ('DELETE', 'UPDATE-DELETE')
+qualify row_number() over (
+    partition by stores.id, stores.valid_from
+    order by stores.valid_from desc
+) = 1
